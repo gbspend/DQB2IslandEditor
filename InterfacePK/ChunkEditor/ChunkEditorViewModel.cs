@@ -76,6 +76,39 @@ namespace DQB2IslandEditor.InterfacePK
         public int CurrentChunkY => CurrentChunk / Island.GRID_DIMENSION;
 
 
+        //------------------------------------GENERATE-----------------------------
+        //The Generate tab paints a selection of chunks on the minimap (green), completely
+        //separate from the current chunk (orange).
+        public event EventHandler? GenerateModeChanged;
+        public event EventHandler? GenerateSelectionChanged;
+
+        private bool _generateMode;
+        public bool GenerateMode
+        {
+            get { return _generateMode; }
+            set
+            {
+                if (_generateMode == value) return;
+                _generateMode = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateMode)));
+                GenerateModeChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private HashSet<ushort> _generateSelection = new HashSet<ushort>();
+        public IReadOnlySet<ushort> GenerateSelection => _generateSelection;
+        public bool HasGenerateSelection => _generateSelection.Count > 0;
+
+        public void SetGenerateSelection(IEnumerable<ushort> chunks)
+        {
+            var newSelection = new HashSet<ushort>(chunks);
+            if (newSelection.SetEquals(_generateSelection)) return;
+            _generateSelection = newSelection;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GenerateSelection)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasGenerateSelection)));
+            GenerateSelectionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         //------------------------------------HUD-----------------------------
         //Colective hud stuffs
         private bool _showMinimapGrid = true;

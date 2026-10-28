@@ -26,6 +26,9 @@
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Border" Property="Background" Value="Gold" />
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Border" Property="Opacity" Value="0.35" />
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -151,7 +154,7 @@
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
                         </TabControl.Resources>
-                        <TabItem Background="Transparent" Style="{StaticResource InventoryHeader}" >
+                        <TabItem Name="InventoryTab" Background="Transparent" Style="{StaticResource InventoryHeader}" >
                             <!--Change style-->
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -170,7 +173,7 @@
                                 </Grid>
                             </Grid>
                         </TabItem>
-                        <TabItem Background="Black" Style="{StaticResource MapHeader}" IsSelected="True">
+                        <TabItem Name="MapTab" Background="Black" Style="{StaticResource MapHeader}" IsSelected="True">
                             <Grid>
                                 <ScrollViewer Name="MapScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Foreground="Black">
                                     <layer:VirtualGridView x:Name="virtualGridView">

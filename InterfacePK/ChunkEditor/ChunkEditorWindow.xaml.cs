@@ -74,6 +74,12 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             MapScrollViewer.Loaded += centerOnce;
             //Keep the selected chunk visible on the minimap as it moves.
             viewModel.ChunkUpdateNotification += (_, _) => BringMinimapChunkIntoView(viewModel.CurrentChunk);
+            //The Generate tab paints on the minimap, so it needs the Map view and no Inventory.
+            viewModel.GenerateModeChanged += (_, _) =>
+            {
+                if (viewModel.GenerateMode) MapTab.IsSelected = true;
+                InventoryTab.IsEnabled = !viewModel.GenerateMode;
+            };
 
             LayerBar.UpdateSeaLevel(30); //Change
         }

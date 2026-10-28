@@ -10,8 +10,12 @@
         <Viewbox>
             <Image Name="MinimapImage"/>
         </Viewbox>
-        <UniformGrid Name="ChunkGridButtons">
+        <UniformGrid Name="ChunkGridButtons"
+                     MouseLeftButtonDown="PaintStart" MouseMove="PaintMove"
+                     MouseLeftButtonUp="PaintEnd" LostMouseCapture="PaintCancel">
 
         </UniformGrid>
+        <!-- Generate tab selection (green), drawn over the chunk cells, independent of the orange current chunk. -->
+        <UniformGrid Name="GenerateOverlay" IsHitTestVisible="False" Visibility="Collapsed"/>
     </Grid>
 </UserControl>

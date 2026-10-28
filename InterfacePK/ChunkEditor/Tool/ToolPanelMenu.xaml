@@ -39,6 +39,7 @@
                <TextBlock Margin="0,-3,0,0" Text="···············" VerticalAlignment="Top" Foreground="Gray" HorizontalAlignment="Center" FontSize="22" FontWeight="ExtraLight"/>
                 <RadioButton Background="Black" Content="Block Edit" GroupName="ToolTabs" Checked="BlockPanel" IsChecked="True" Width="95"/>
                 <RadioButton Background="Black" Content="Item Edit" GroupName="ToolTabs" Checked="ItemPanel" Width="95"/>
+                <RadioButton Background="Black" Content="Generate" GroupName="ToolTabs" Checked="GeneratePanel" Width="95"/>
                <TextBlock Margin="0,-3,0,0" Text="···············" VerticalAlignment="Top" Foreground="Gray" HorizontalAlignment="Center" FontSize="22" FontWeight="ExtraLight"/>
            </StackPanel>
         </Viewbox>
