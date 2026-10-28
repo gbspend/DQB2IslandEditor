@@ -29,9 +29,10 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
 
         readonly double WINDOW_WIDTH = 1600;
         readonly double WINDOW_HEIGHT = 900;
-        public ChunkEditorWindow(SaveData saveData, byte island)
+        //stgdatPath: load this exact file instead of the island's STGDATxx.BIN (used by Reload).
+        public ChunkEditorWindow(SaveData saveData, byte island, string? stgdatPath = null)
         {
-            Task<ushort> readFileTask = Task.Run(() => ReadFile(saveData, island));
+            Task<ushort> readFileTask = Task.Run(() => ReadFile(saveData, island, stgdatPath));
             Task databaseBlockTask = Task.Run(() => DataBaseReading.ReadBlockFile());
             Task databaseItemTask = Task.Run(() => DataBaseReading.ReadItemFile());
 
@@ -76,9 +77,11 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
 
             LayerBar.UpdateSeaLevel(30); //Change
         }
-        public async Task<ushort> ReadFile(SaveData saveData, byte island)
+        public async Task<ushort> ReadFile(SaveData saveData, byte island, string? stgdatPath)
         {
-            Task loadSaveFile = Task.Run(() => saveData.OpenSTGDATCompressedFile(island));
+            Task loadSaveFile = stgdatPath != null
+                ? Task.Run(() => saveData.OpenSTGDATCompressedFile(stgdatPath))
+                : Task.Run(() => saveData.OpenSTGDATCompressedFile(island));
             await loadSaveFile;
             Task<ushort> loadFirstChunk = Task.Run(() => saveData.Island.GetMiddleChunk());
             return await loadFirstChunk;
@@ -142,6 +145,45 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
                 MessageBox.Show(ex.Message, "Failed to open file", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        //Throws away all in-memory changes and loads the current island file again from disk.
+        //Done by opening a fresh editor window on the same file (at the same chunk/layer) and closing this one,
+        //so nothing from the old island lingers in the views or tools.
+        private void ReloadSTGDAT(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure? Any unsaved changes will be lost.", "Reload island",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            try
+            {
+                string path = saveData.Island.STGDATPath;
+                if (!System.IO.File.Exists(path))
+                {
+                    MessageBox.Show("Couldn't find " + path, "Failed to reload file", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                ushort chunk = viewModel.CurrentChunk;
+                byte layer = viewModel.CurrentLayer;
+
+                var reloaded = new ChunkEditorWindow(saveData, saveData.Island.islandNumber, path)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = Left,
+                    Top = Top,
+                    Width = Width,
+                    Height = Height,
+                    WindowState = WindowState,
+                };
+                reloaded.viewModel.ChangeChunk(chunk);
+                reloaded.viewModel.CurrentLayer = layer;
+                reloaded.Show();
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                MessageBox.Show(ex.Message, "Failed to reload file", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void SaveSTGDAT(object sender, RoutedEventArgs e)
         {
             try

@@ -190,11 +190,32 @@
             <Border BorderThickness="2" CornerRadius="12" Margin="8" Background="Black" Padding="2" BorderBrush="#232337">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="80"/>
                     </Grid.ColumnDefinitions>
-                    <tools:ToolPanelMenu x:Name="toolMenu"/>
-                    <Grid Grid.Column="1">
+                    <!-- Reload the island from disk, discarding unsaved changes. -->
+                    <Button Name="ReloadButton" Click="ReloadSTGDAT" ToolTip="Reload island from disk"
+                            Width="45" Height="45" Margin="6" VerticalAlignment="Top" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Name="Border" Background="#C62828" CornerRadius="10">
+                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="22" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#E53935"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#8E0000"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <tools:ToolPanelMenu x:Name="toolMenu" Grid.Column="1"/>
+                    <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="90"/>
                             <RowDefinition Height="*"/>
