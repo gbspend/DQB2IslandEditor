@@ -57,17 +57,6 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Tool
             PanelsToDisplay.Clear();
         }
 
-        private void AreaPanel(object sender, RoutedEventArgs e)
-        {
-            _currentTab = 2;
-            PanelsToDisplay.Clear();
-        }
-
-        private void OtherPanel(object sender, RoutedEventArgs e)
-        {
-            _currentTab = 3;
-            PanelsToDisplay.Clear();
-        }
         private void PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(viewModel.SelectedBlock))  // BLOCKINFO CHANGE

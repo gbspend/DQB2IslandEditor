@@ -156,6 +156,13 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map
         }
 
 
+        //The minimap cell for a chunk, or null if it's outside the displayed area.
+        public FrameworkElement GetChunkElement(ushort chunk)
+        {
+            if (allChunks == null) return null;
+            return allChunks.TryGetValue(chunk, out var border) ? border : null;
+        }
+
         public ushort[] getCoords()
         {
             ushort[] c = new ushort[2];

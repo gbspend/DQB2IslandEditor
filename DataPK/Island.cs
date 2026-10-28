@@ -64,7 +64,6 @@ namespace DQB2IslandEditor.DataPK
                 default:
                     break;
             }
-            Console.WriteLine(ToString());
             STGDATPath = sTGDATPath;
         }
 
@@ -86,7 +85,6 @@ namespace DQB2IslandEditor.DataPK
                 default:
                     break;
             }
-            Console.WriteLine(ToString());
         }
 
         private void ConstructChunkData(byte[] fileBytes) {
@@ -231,8 +229,6 @@ namespace DQB2IslandEditor.DataPK
 
                             uint dataPointer = (uint)(OFF_ITEM_DATA + (relativeDataPointer * SIZE_ITEM_DATA));
                             Array.Copy(item.GetByteFormat(), 0, STGDATBody, dataPointer, 24);
-                            Console.WriteLine("Saved item "+ entryPointer.ToString("X") + " / " + dataPointer.ToString("X") + " OLD -> " +
-                                 item.tempEntryOff.ToString("X") + " / " + item.tempDataOff.ToString("X"));
 
                         }
                         

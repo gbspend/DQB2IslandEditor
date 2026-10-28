@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Net.WebSockets;
@@ -33,13 +35,11 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             Task databaseBlockTask = Task.Run(() => DataBaseReading.ReadBlockFile());
             Task databaseItemTask = Task.Run(() => DataBaseReading.ReadItemFile());
 
-            Console.WriteLine("CREATING VIEW MODEL\n");
             viewModel = new ChunkEditorViewModel(this, saveData);
             viewModel.SelectedTool = 0;
 
             this.DataContext = viewModel;
             this.saveData = saveData;
-            Console.WriteLine("CREATING WINDOW\n");
 
             InitializeComponent();
             //Keep the layer bar highlight in sync with the current layer.
@@ -55,27 +55,32 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             chunkBlockGrid.ShareViewModel(viewModel);
             toolMenu.UpdateContext(viewModel);
 
-            Console.WriteLine("WAIT FOR ASYNC INVENTORY\n");
             databaseBlockTask.Wait();
             databaseItemTask.Wait();
-            Console.WriteLine("CREATING INVENTORY\n");
             viewModel.CreateInventory();
 
-            Console.WriteLine("WAIT FOR ASYNC SAVE DATA\n");
             chunkBlockGrid.SetChunk(readFileTask.Result);
             viewModel.JumpToFirstAirLayer();
-            Console.WriteLine("SAVE DATA LOADED\n");
             virtualGridView.Init(saveData.Island, viewModel);
+            //Once the minimap has a size, scroll it so the starting chunk is in the middle.
+            //Only the first time, Loaded fires again whenever the Map tab is reselected.
+            RoutedEventHandler? centerOnce = null;
+            centerOnce = (_, _) =>
+            {
+                MapScrollViewer.Loaded -= centerOnce;
+                CenterMinimapOn(viewModel.CurrentChunk);
+            };
+            MapScrollViewer.Loaded += centerOnce;
+            //Keep the selected chunk visible on the minimap as it moves.
+            viewModel.ChunkUpdateNotification += (_, _) => BringMinimapChunkIntoView(viewModel.CurrentChunk);
 
             LayerBar.UpdateSeaLevel(30); //Change
         }
         public async Task<ushort> ReadFile(SaveData saveData, byte island)
         {
-            Console.WriteLine("THREAD - ASYNC START\n");
             Task loadSaveFile = Task.Run(() => saveData.OpenSTGDATCompressedFile(island));
             await loadSaveFile;
             Task<ushort> loadFirstChunk = Task.Run(() => saveData.Island.GetMiddleChunk());
-            Console.WriteLine("THREAD - ASYNC END\n");
             return await loadFirstChunk;
         }
         private void RecalculateSize(object sender, SizeChangedEventArgs e)
@@ -110,7 +115,6 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             }
             if (inventoryMenu != null)
             {
-                Console.WriteLine("RESIZE:" + e.NewSize + "\n");
                 inventoryMenu.Resize(inventoryMenu.ActualHeight, inventoryMenu.ActualWidth);
                 LayerBar.Resize();
             }
@@ -247,6 +251,45 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
                 new BlockInstance(19, 0));
         }
 
+
+        private void CenterMinimapOn(ushort chunk)
+        {
+            var cell = virtualGridView.GetChunkElement(chunk);
+            if (cell == null) return;
+            MapScrollViewer.UpdateLayout();
+            //Center of the cell in the scroll viewer's own (scaled, scrolled) coordinates.
+            Point center = cell.TransformToAncestor(MapScrollViewer)
+                .Transform(new Point(cell.ActualWidth / 2, cell.ActualHeight / 2));
+            MapScrollViewer.ScrollToHorizontalOffset(MapScrollViewer.HorizontalOffset + center.X - MapScrollViewer.ViewportWidth / 2);
+            MapScrollViewer.ScrollToVerticalOffset(MapScrollViewer.VerticalOffset + center.Y - MapScrollViewer.ViewportHeight / 2);
+        }
+
+        //Scrolls the minimap only as far as needed to show the chunk, plus half a cell of margin.
+        private void BringMinimapChunkIntoView(ushort chunk)
+        {
+            var cell = virtualGridView.GetChunkElement(chunk);
+            if (cell == null || !cell.IsVisible) return; //Map tab not shown, or chunk off the minimap.
+            double w = cell.ActualWidth, h = cell.ActualHeight;
+            cell.BringIntoView(new Rect(-w / 2, -h / 2, w * 2, h * 2));
+        }
+
+        //WASD moves the chunk selection north/west/south/east.
+        private void WindowKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.FocusedElement is TextBoxBase) return; //Typing, e.g. in the inventory filter.
+            if (Keyboard.Modifiers != ModifierKeys.None) return;
+            string? command = e.Key switch
+            {
+                Key.W => "u",
+                Key.A => "l",
+                Key.S => "d",
+                Key.D => "r",
+                _ => null
+            };
+            if (command == null) return;
+            chunkBlockGrid.ChangeChunk(command);
+            e.Handled = true;
+        }
 
         private void UpdateMapSize(object sender, RoutedPropertyChangedEventArgs<double> e)
         {

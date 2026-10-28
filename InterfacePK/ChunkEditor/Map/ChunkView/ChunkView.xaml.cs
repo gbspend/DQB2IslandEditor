@@ -86,9 +86,47 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
 
         //------------------------------------------------------------------
         //SEE-THROUGH
-        //For every air tile on the current layer, find the first solid block below it
-        //and show it darkened by how many layers down it is.
+        //For every air or water tile on the current layer, find the first solid block below it
+        //and show it darkened by how many layers down it is. Water is see-through too:
+        //water tiles are drawn translucent over the floor, and water below an air tile
+        //is drawn translucent over the floor under it.
         private const uint AIR_ID = 0;
+
+        private static bool IsWater(uint id)
+        {
+            return DataBaseReading.BLOCK_INFO_DICTIONARY.TryGetValue(id, out var info) && info.isWater;
+        }
+
+        private static bool IsSeeThrough(uint id) => id == AIR_ID || IsWater(id);
+
+        //Tracks one column while walking down it. Returns true once a solid block has been found.
+        private class ColumnScan
+        {
+            public readonly bool fromWater; //The current-layer tile is water.
+            public uint? waterID;
+            public byte waterDepth;
+            public ColumnScan(bool fromWater) { this.fromWater = fromWater; }
+
+            public bool Step(TileContainer tile, uint id, byte depth)
+            {
+                if (id == AIR_ID) return false;
+                if (IsWater(id))
+                {
+                    //Remember the top of the water. Water under water is just more of the same body.
+                    if (!fromWater && waterID == null) { waterID = id; waterDepth = depth; }
+                    return false;
+                }
+                tile.SetGhost(id, depth, waterID, waterDepth);
+                return true;
+            }
+
+            //Reached the bottom without finding anything solid.
+            public void Finish(TileContainer tile)
+            {
+                if (waterID != null) tile.SetGhost(null, 0, waterID, waterDepth);
+                else tile.ClearGhost();
+            }
+        }
 
         private void UpdateSeeThrough(BlockInstance[] currentLayerBlocks)
         {
@@ -99,53 +137,49 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             }
 
             //Tiles that still need a block found under them.
-            var pending = new List<int>();
+            var pending = new Dictionary<int, ColumnScan>();
             for (int i = 0; i < tiles.Length; i++)
             {
-                if (currentLayerBlocks[i].publicBlockID == AIR_ID) pending.Add(i);
+                var id = currentLayerBlocks[i].publicBlockID;
+                if (IsSeeThrough(id)) pending[i] = new ColumnScan(id != AIR_ID);
                 else tiles[i].ClearGhost();
             }
 
-            //Walk down one layer at a time, only checking columns that are still air.
+            //Walk down one layer at a time, only checking columns that are still see-through.
+            var done = new List<int>();
             for (int y = layer - 1; y >= 0 && pending.Count > 0; y--)
             {
                 var below = displayedChunk.GetBlocksFromLayer((byte)y);
                 var depth = (byte)(layer - y);
-                pending.RemoveAll(i =>
-                {
-                    var id = below[i].publicBlockID;
-                    if (id == AIR_ID) return false;
-                    tiles[i].SetGhost(id, depth);
-                    return true;
-                });
+                foreach (var (i, scan) in pending)
+                    if (scan.Step(tiles[i], below[i].publicBlockID, depth)) done.Add(i);
+                foreach (var i in done) pending.Remove(i);
+                done.Clear();
             }
 
-            //Nothing below at all (open sea/void): show plain air.
-            foreach (var i in pending) tiles[i].ClearGhost();
+            //Nothing solid below at all (open sea/void).
+            foreach (var (i, scan) in pending) scan.Finish(tiles[i]);
         }
 
         //Recalculate a single column after an edit on the current layer.
         private void UpdateSeeThroughAt(ushort offset)
         {
             var tile = tiles[offset];
-            if (!viewModel.ShowSeeThrough || displayedChunk.IsEmpty()
-                || tile.blockInstance.publicBlockID != AIR_ID)
+            var currentID = tile.blockInstance.publicBlockID;
+            if (!viewModel.ShowSeeThrough || displayedChunk.IsEmpty() || !IsSeeThrough(currentID))
             {
                 tile.ClearGhost();
                 return;
             }
             byte x = (byte)(offset % Chunk.X_DIMENSION);
             byte z = (byte)(offset / Chunk.X_DIMENSION);
+            var scan = new ColumnScan(currentID != AIR_ID);
             for (int y = layer - 1; y >= 0; y--)
             {
                 var id = displayedChunk.GetBlockFromCoords(x, z, (byte)y).publicBlockID;
-                if (id != AIR_ID)
-                {
-                    tile.SetGhost(id, (byte)(layer - y));
-                    return;
-                }
+                if (scan.Step(tile, id, (byte)(layer - y))) return;
             }
-            tile.ClearGhost();
+            scan.Finish(tile);
         }
 
         private void UpdateItemsOnGrid(List<ItemInstance> items)
@@ -154,7 +188,6 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             itemContainerGrid.Clear();
             foreach (var item in items)
             {
-                Console.WriteLine(item.ToString());
                 ItemContainer itemContainer = new ItemContainer(item, 32); //  1024/32
 
                 itemContainer.ItemBorder.PreviewMouseDown += (_, _) => { viewModel.ItemTile_LeftClick(itemContainer); };

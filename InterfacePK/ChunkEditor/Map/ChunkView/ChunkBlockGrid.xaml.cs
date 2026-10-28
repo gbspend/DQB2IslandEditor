@@ -79,7 +79,8 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             ChangeChunk(command);
         }
 
-        private void ChangeChunk(string command)
+        //command: any of "l", "r", "u", "d" (left/west, right/east, up/north, down/south).
+        public void ChangeChunk(string command)
         {
             var chunkIdList = ChunkList;
 
@@ -120,28 +121,13 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             viewModel.JumpToFirstAirLayer();
         }
 
-        //For more intuitive movement.
+        //Scrolling moves layers up and down, same as the layer bar.
         private void ScrollUpdate(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta != 0)
-            {
-                Point localPosition = e.GetPosition(this);
-                Point relativePosition = new Point((localPosition.X / ActualWidth) - 0.5, (localPosition.Y / ActualHeight) - 0.5);
-                //If the difference is too low then dont move.
-                if (Math.Abs(Math.Abs(relativePosition.X) - Math.Abs(relativePosition.Y)) < 0.08) return;
-
-                //Change for later since the scrolling will be smoother.
-                if (Math.Abs(relativePosition.X) > Math.Abs(relativePosition.Y))
-                    if (e.Delta > 0)
-                        ChangeChunk("r");
-                    else
-                        ChangeChunk("l");
-                else
-                    if (e.Delta > 0)
-                        ChangeChunk("u");
-                    else
-                        ChangeChunk("d");
-            }
+            if (e.Delta > 0)
+                viewModel.CurrentLayer += 1;
+            else if (e.Delta < 0)
+                viewModel.CurrentLayer -= 1;
         }
 
 

@@ -11,7 +11,7 @@
         xmlns:tools="clr-namespace:DQB2IslandEditor.InterfacePK.ChunkEditor.Tool"
         mc:Ignorable="d" 
         SnapsToDevicePixels="True"
-        Title="DQB2 Island Editor: Chunk Editor" Height="800" Width="1500" SizeChanged="RecalculateSize" >
+        Title="DQB2 Island Editor: Chunk Editor" Height="800" Width="1500" SizeChanged="RecalculateSize" PreviewKeyDown="WindowKeyDown">
     <Window.Resources>
         <Style TargetType="TabItem" x:Key="InventoryHeader">
             <Setter Property="Template">
@@ -144,10 +144,6 @@
         <UniformGrid Rows="2">
             <Border BorderThickness="2" CornerRadius="12" Margin="8" Background="Black" Padding="2" BorderBrush="#232337">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="80"/>
-                    </Grid.ColumnDefinitions>
                     <TextBlock Margin="0,-3,0,0" Text="···················································································" VerticalAlignment="Top" Foreground="Gray" HorizontalAlignment="Center" FontSize="22" FontWeight="ExtraLight"/>
                     <TabControl Background="Transparent" BorderThickness="0">
                         <TabControl.Resources>
@@ -157,7 +153,22 @@
                         </TabControl.Resources>
                         <TabItem Background="Transparent" Style="{StaticResource InventoryHeader}" >
                             <!--Change style-->
-                            <inventory:InventoryMenu x:Name="inventoryMenu" Margin="10,10,10,5"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <inventory:InventoryMenu x:Name="inventoryMenu" Margin="10,10,10,5"/>
+                                <!-- Selected block and favourites, only shown with the inventory. -->
+                                <Grid Grid.Column="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="80"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <inventory:SelectedObject x:Name="selectedObject"/>
+                                    <inventory:FavouriteList x:Name="favouriteList" Grid.Row="1"/>
+                                </Grid>
+                            </Grid>
                         </TabItem>
                         <TabItem Background="Black" Style="{StaticResource MapHeader}" IsSelected="True">
                             <Grid>
@@ -174,14 +185,6 @@
                             </Grid>
                         </TabItem>
                     </TabControl>
-                    <Grid Grid.Column="1">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="80"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <inventory:SelectedObject x:Name="selectedObject"/>
-                        <inventory:FavouriteList x:Name="favouriteList" Grid.Row="1"/>
-                    </Grid>
                 </Grid>
             </Border>
             <Border BorderThickness="2" CornerRadius="12" Margin="8" Background="Black" Padding="2" BorderBrush="#232337">

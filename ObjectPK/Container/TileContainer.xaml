@@ -13,10 +13,15 @@
             </ToolTip>
         </Border.ToolTip>
         <Grid>
-            <!-- See-through: the first solid block below this (air) tile, darkened by depth. -->
+            <!-- See-through: the first solid block below this (air/water) tile, darkened by depth. -->
             <Grid Name="Ghost" Visibility="Collapsed" IsHitTestVisible="False">
                 <Image Name="GhostImage" Source="{Binding ghostInfo.Value.objectMapImage}" Stretch="Fill"/>
                 <Rectangle Name="GhostShade" Fill="Black"/>
+                <!-- Water lying between the current layer and that block, drawn translucent on top. -->
+                <Grid Name="GhostWater" Visibility="Collapsed">
+                    <Image Source="{Binding ghostWaterInfo.Value.objectMapImage}" Stretch="Fill"/>
+                    <Rectangle Name="GhostWaterShade" Fill="Black"/>
+                </Grid>
             </Grid>
             <Image Name="Image" Source="{Binding blockInfo.Value.objectMapImage}" Stretch="Fill"/>
         </Grid>

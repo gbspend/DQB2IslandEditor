@@ -70,7 +70,6 @@ namespace DQB2IslandEditor.DataPK
         {
             float size = DataBaseReading.GetTileSize(chunky);
 
-            Console.WriteLine(tileLimits.X0 + ", " + tileLimits.X1 + ", " + tileLimits.Y0+", "+tileLimits.Y1);
 
             DrawingVisual drawingVisual = new DrawingVisual();
             using (DrawingContext context = drawingVisual.RenderOpen())

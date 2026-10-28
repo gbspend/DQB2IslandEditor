@@ -95,7 +95,6 @@ namespace DQB2IslandEditor.InterfacePK
         {
             this.mWindow = mWindow;
             DataBaseReading.ReadIslands();
-            Console.WriteLine("NORMAL START\n");
             DataBaseReading.InitStaticElements();
         }
 

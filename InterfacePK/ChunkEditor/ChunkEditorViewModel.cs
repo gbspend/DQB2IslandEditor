@@ -265,7 +265,6 @@ namespace DQB2IslandEditor.InterfacePK
         public ChunkEditorViewModel(ChunkEditorWindow mainWindow, SaveData saveData) {
             this.chunkEditorWindow = mainWindow;
             this.saveData = saveData;
-            Console.WriteLine("Created View Model");
             
         }
         public void CreateInventory()
