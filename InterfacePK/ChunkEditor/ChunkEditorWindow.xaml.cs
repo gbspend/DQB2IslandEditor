@@ -42,7 +42,14 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             Console.WriteLine("CREATING WINDOW\n");
 
             InitializeComponent();
+            //Keep the layer bar highlight in sync with the current layer.
+            viewModel.LayerUpdateNotification += (_, e) =>
+            {
+                if (e.PropertyName == nameof(viewModel.CurrentLayer)) LayerBar.LayerChange(viewModel.CurrentLayer);
+            };
 
+            //The editor opens on the Map tab, so the inventory only gets a real size once its tab is shown.
+            inventoryMenu.Loaded += (_, _) => inventoryMenu.Resize(inventoryMenu.ActualHeight, inventoryMenu.ActualWidth);
             inventoryMenu.shareViewModel(viewModel);
             favouriteList.shareViewModel(viewModel);
             chunkBlockGrid.ShareViewModel(viewModel);
@@ -56,6 +63,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
 
             Console.WriteLine("WAIT FOR ASYNC SAVE DATA\n");
             chunkBlockGrid.SetChunk(readFileTask.Result);
+            viewModel.JumpToFirstAirLayer();
             Console.WriteLine("SAVE DATA LOADED\n");
             virtualGridView.Init(saveData.Island, viewModel);
 
@@ -66,7 +74,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             Console.WriteLine("THREAD - ASYNC START\n");
             Task loadSaveFile = Task.Run(() => saveData.OpenSTGDATCompressedFile(island));
             await loadSaveFile;
-            Task<ushort> loadFirstChunk = Task.Run(() => saveData.Island.GetFirstChunk());
+            Task<ushort> loadFirstChunk = Task.Run(() => saveData.Island.GetMiddleChunk());
             Console.WriteLine("THREAD - ASYNC END\n");
             return await loadFirstChunk;
         }
@@ -120,7 +128,8 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
                 if (openFileDialog.ShowDialog() == false) return;
 
                 saveData.OpenSTGDATCompressedFile(openFileDialog.FileName);
-                viewModel.ChangeChunk(saveData.Island.GetFirstChunk());
+                viewModel.ChangeChunk(saveData.Island.GetMiddleChunk());
+                viewModel.JumpToFirstAirLayer();
 
             }
             catch (Exception ex)

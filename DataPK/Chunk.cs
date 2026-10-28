@@ -30,7 +30,7 @@ namespace DQB2IslandEditor.DataPK
                 this.blockBytes = new byte[SIZE_LAYER * Y_DIMENSION];
                 Array.Copy(blockBytes, 0, this.blockBytes, 0, blockBytes.Length);
             }
-            this.blockBytes = blockBytes;
+            else this.blockBytes = blockBytes;
             this.chunkPosition = chunkPosition;
             itemInstances = new List<ItemInstance>();
         }
@@ -58,6 +58,34 @@ namespace DQB2IslandEditor.DataPK
             var offset = layer * SIZE_LAYER;
             for (var i = 0; i < X_DIMENSION * Z_DIMENSION; i ++) layerBlocks[i] = new BlockInstance(blockBytes[offset + i * 2], blockBytes[offset + i * 2 + 1]);
             return layerBlocks;
+        }
+
+        //First layer (from the bottom) that has at least one air block, ignoring columns that are already air on layer 0.
+        //Reads the raw bytes so no BlockInstances are created.
+        public byte FirstLayerWithAir()
+        {
+            if (blockBytes == null) return 0;
+            byte lowest = (byte)(Y_DIMENSION - 1);
+            bool anyColumn = false;
+            for (var i = 0; i < X_DIMENSION * Z_DIMENSION; i++)
+            {
+                if (IsAirAt(i * 2)) continue; //Column is empty on layer 0, ignore it.
+                anyColumn = true;
+                for (byte layer = 1; layer < lowest; layer++)
+                {
+                    if (IsAirAt(layer * SIZE_LAYER + i * 2))
+                    {
+                        lowest = layer;
+                        break;
+                    }
+                }
+            }
+            return anyColumn ? lowest : (byte)0;
+        }
+
+        private bool IsAirAt(long offset)
+        {
+            return blockBytes[offset] == 0 && (blockBytes[offset + 1] & 0x07) == 0;
         }
 
         public List<ItemInstance> GetItemsFromLayer(byte layer)

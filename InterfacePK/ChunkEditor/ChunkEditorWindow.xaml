@@ -159,7 +159,7 @@
                             <!--Change style-->
                             <inventory:InventoryMenu x:Name="inventoryMenu" Margin="10,10,10,5"/>
                         </TabItem>
-                        <TabItem Background="Black" Style="{StaticResource MapHeader}">
+                        <TabItem Background="Black" Style="{StaticResource MapHeader}" IsSelected="True">
                             <Grid>
                                 <ScrollViewer Name="MapScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Foreground="Black">
                                     <layer:VirtualGridView x:Name="virtualGridView">
@@ -169,7 +169,7 @@
                                         </layer:VirtualGridView.LayoutTransform>
                                     </layer:VirtualGridView>
                                 </ScrollViewer>
-                                <Slider x:Name="ZoomSlider" Minimum="0.5" Maximum="3" Value="1" TickFrequency="0.1" Orientation="Vertical" Width="20"
+                                <Slider x:Name="ZoomSlider" Minimum="0.5" Maximum="3" Value="0.5" TickFrequency="0.1" Orientation="Vertical" Width="20"
                                             HorizontalAlignment="Left" Margin="0,0,0,20" ValueChanged="UpdateMapSize"/>
                             </Grid>
                         </TabItem>

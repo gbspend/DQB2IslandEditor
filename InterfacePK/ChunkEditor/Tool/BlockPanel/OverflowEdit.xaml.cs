@@ -22,17 +22,15 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Tool.BlockPanel
     /// </summary>
     public partial class OverflowEdit : UserControl
     {
-        public OverflowEdit()
+        private ChunkEditorViewModel viewModel;
+        //Holds its own view model (like ChiselEdit): the inherited DataContext goes null when the panel is removed from the tool menu.
+        public OverflowEdit(ChunkEditorViewModel viewModel)
         {
+            this.viewModel = viewModel;
             InitializeComponent();
+            DataContext = viewModel;
 
-        }
-
-        private bool load = false;
-        private void OnLoad(object sender, RoutedEventArgs e)
-        {
-            if (load) return;
-            if (((ChunkEditorViewModel)DataContext).SelectedBlock == null)
+            if (viewModel.SelectedBlock == null)
             {
                 this.Visibility = Visibility.Collapsed;
             }
@@ -40,12 +38,11 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Tool.BlockPanel
             {
                 this.Visibility = Visibility.Visible;
             }
-            load = true;
-            ((ChunkEditorViewModel)DataContext).PropertyChanged += PropertyChanged;
+            viewModel.PropertyChanged += PropertyChanged;
         }
+
         private void PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var viewModel = (ChunkEditorViewModel)DataContext;
             if (e.PropertyName == nameof(viewModel.SelectedBlock))  // BLOCKINFO CHANGE
             {
                 if (viewModel.SelectedBlock == null)

@@ -256,6 +256,29 @@ namespace DQB2IslandEditor.DataPK
             return 0; //Oh no
         }
 
+        //For loading in the island for the first time: the chunk in the middle of the island (rounded down).
+        //If that one is empty, the closest non-empty chunk to it.
+        public ushort GetMiddleChunk()
+        {
+            var frame = ChunkGridFrame();
+            int midX = (int)(frame.X0 + frame.X1) / 2;
+            int midY = (int)(frame.Y0 + frame.Y1) / 2;
+            ushort best = GetFirstChunk();
+            int bestDistance = int.MaxValue;
+            foreach (Chunk chunk in chunks)
+            {
+                if (chunk.IsEmpty()) continue;
+                int dx = chunk.chunkXPosition - midX;
+                int dy = chunk.chunkYPosition - midY;
+                if (dx * dx + dy * dy < bestDistance)
+                {
+                    bestDistance = dx * dx + dy * dy;
+                    best = chunk.chunkPosition;
+                }
+            }
+            return best;
+        }
+
         public bool IsChunkEmpty(ushort vChunk)
         {
             return chunks[vChunk].IsEmpty();

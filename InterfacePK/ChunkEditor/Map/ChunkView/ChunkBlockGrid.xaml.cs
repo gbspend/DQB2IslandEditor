@@ -115,6 +115,11 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             viewModel.CurrentLayer = (byte)(viewModel.CurrentLayer + short.Parse((sender as Button).Tag.ToString()));
         }
 
+        private void JumpToFirstAirLayer(object sender, RoutedEventArgs e)
+        {
+            viewModel.JumpToFirstAirLayer();
+        }
+
         //For more intuitive movement.
         private void ScrollUpdate(object sender, MouseWheelEventArgs e)
         {

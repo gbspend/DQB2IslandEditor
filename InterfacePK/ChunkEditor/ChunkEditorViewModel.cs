@@ -58,12 +58,17 @@ namespace DQB2IslandEditor.InterfacePK
             }
             set
             {
-                if (value > 96) return;
+                if (value >= Chunk.Y_DIMENSION) return;
                 _currentLayer = value;
                 LayerUpdateNotification?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLayer)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLayer)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SeaBrush)));
             }
+        }
+        //Moves the view to the lowest layer that has air in any of the displayed chunks.
+        public void JumpToFirstAirLayer()
+        {
+            CurrentLayer = CurrentChunks.Min(c => CurrentIsland.GetChunk(c).FirstLayerWithAir());
         }
         public ushort[] CurrentChunks => chunkEditorWindow.chunkBlockGrid.ChunkList;
         public ushort CurrentChunk => chunkEditorWindow.chunkBlockGrid.FirstChunk;
