@@ -133,12 +133,14 @@ namespace DQB2IslandEditor.InterfacePK
 
         public byte auraSize = 1;
         public bool auraSquare = false;
+        public bool paintFill = false; //Paint tool fills the connected area instead of using the aura.
 
         private ITool _currentTool; //Handler of the current tool.
 
         public byte SelectedTool { get { return _selectedTool; }
             set {
-                if(_selectedTool != value)
+                //Paint is rebuilt even when already selected, since its mode (brush or fill) may have changed.
+                if(_selectedTool != value || value == 2)
                 {
                     switch (value)
                     {
@@ -146,7 +148,7 @@ namespace DQB2IslandEditor.InterfacePK
                             _currentTool = new SelectionTool(this, chunkEditorWindow.chunkBlockGrid);
                             break;
                         case 2:
-                            _currentTool = new TrowelTool(this, chunkEditorWindow.chunkBlockGrid);
+                            _currentTool = paintFill ? new FillTool(this, chunkEditorWindow.chunkBlockGrid) : new TrowelTool(this, chunkEditorWindow.chunkBlockGrid);
                             break;
                     }
                 }
@@ -158,7 +160,7 @@ namespace DQB2IslandEditor.InterfacePK
         }
 
         //Tool display.
-        public string SelectedToolName => _selectedTool == 0 ? "Select" : _selectedTool == 1 ? "Area" : _selectedTool == 2 ? "Paint" : "Chisel";
+        public string SelectedToolName => _selectedTool == 0 ? "Select" : _selectedTool == 1 ? "Area" : _selectedTool == 2 ? (paintFill ? "Fill" : "Paint") : "Chisel";
         public ImageSource SelectedToolImage => DataBaseReading.toolImage(SelectedTool, true);
         public ImageSource ToolImageZero => DataBaseReading.toolImage(0, false);
         public ImageSource ToolImageOne => DataBaseReading.toolImage(1, false);

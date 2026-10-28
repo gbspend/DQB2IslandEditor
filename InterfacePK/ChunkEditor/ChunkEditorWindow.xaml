@@ -229,6 +229,7 @@
                                     <Button Background="Transparent" BorderThickness="0" Content="1x1"  Foreground="White" Padding="5" Click="ToolChange1"/>
                                     <Button Background="Transparent" BorderThickness="0" Content="3x3 ⬤"  Foreground="White" Padding="5" Click="ToolChange2"/>
                                     <Button Background="Transparent" BorderThickness="0" Content="3x3 ■"  Foreground="White" Padding="5" Click="ToolChange3"/>
+                                    <Button Background="Transparent" BorderThickness="0" Content="Fill"  Foreground="White" Padding="5" Click="ToolChangeFill"/>
                                 </StackPanel>
                             </Border>
                         </Popup>

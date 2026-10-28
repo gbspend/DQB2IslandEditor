@@ -208,6 +208,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
         private void ToolChange1(object sender, RoutedEventArgs e)
         {
             viewModel.auraSize = 0;
+            viewModel.paintFill = false;
             viewModel.SelectedTool = 2;
             PaintPopup.IsOpen = false;
         }
@@ -215,14 +216,22 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
         {
             viewModel.auraSize = 2;
             viewModel.auraSquare = false;
+            viewModel.paintFill = false;
             viewModel.SelectedTool = 2;
             PaintPopup.IsOpen = false;
         }
         private void ToolChange3(object sender, RoutedEventArgs e)
         {
             viewModel.auraSize = 2;
+            viewModel.paintFill = false;
             viewModel.SelectedTool = 2;
             viewModel.auraSquare = true;
+            PaintPopup.IsOpen = false;
+        }
+        private void ToolChangeFill(object sender, RoutedEventArgs e)
+        {
+            viewModel.paintFill = true;
+            viewModel.SelectedTool = 2;
             PaintPopup.IsOpen = false;
         }
 
