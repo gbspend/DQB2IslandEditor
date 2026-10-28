@@ -101,6 +101,19 @@ namespace DQB2IslandEditor.InterfacePK
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowItemsVisibility)));
             }
         }
+        //See-through: air tiles show the first solid block below them, darkened by depth.
+        private bool _showSeeThrough = true;
+        public bool ShowSeeThrough
+        {
+            get { return _showSeeThrough; }
+            set
+            {
+                _showSeeThrough = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeeThrough)));
+                //Chunk views redraw on this notification.
+                LayerUpdateNotification?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeeThrough)));
+            }
+        }
         public Brush SeaBrush
         {
             get { return _currentLayer > 30 ? Brushes.Black : Brushes.DarkBlue; }

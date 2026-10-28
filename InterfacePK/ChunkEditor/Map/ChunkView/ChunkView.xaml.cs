@@ -77,11 +77,76 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
             {
                 tiles[i].blockInstance = blockInstances[i];
             }
+            UpdateSeeThrough(blockInstances);
             var itemInstances = displayedChunk.GetItemsFromLayer(layer);
             //should have delegated the block one to the chunk block grid as well but ah.
             UpdateItemsOnGrid(itemInstances);
         }
 
+
+        //------------------------------------------------------------------
+        //SEE-THROUGH
+        //For every air tile on the current layer, find the first solid block below it
+        //and show it darkened by how many layers down it is.
+        private const uint AIR_ID = 0;
+
+        private void UpdateSeeThrough(BlockInstance[] currentLayerBlocks)
+        {
+            if (!viewModel.ShowSeeThrough || displayedChunk.IsEmpty() || layer == 0)
+            {
+                for (int i = 0; i < tiles.Length; i++) tiles[i].ClearGhost();
+                return;
+            }
+
+            //Tiles that still need a block found under them.
+            var pending = new List<int>();
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                if (currentLayerBlocks[i].publicBlockID == AIR_ID) pending.Add(i);
+                else tiles[i].ClearGhost();
+            }
+
+            //Walk down one layer at a time, only checking columns that are still air.
+            for (int y = layer - 1; y >= 0 && pending.Count > 0; y--)
+            {
+                var below = displayedChunk.GetBlocksFromLayer((byte)y);
+                var depth = (byte)(layer - y);
+                pending.RemoveAll(i =>
+                {
+                    var id = below[i].publicBlockID;
+                    if (id == AIR_ID) return false;
+                    tiles[i].SetGhost(id, depth);
+                    return true;
+                });
+            }
+
+            //Nothing below at all (open sea/void): show plain air.
+            foreach (var i in pending) tiles[i].ClearGhost();
+        }
+
+        //Recalculate a single column after an edit on the current layer.
+        private void UpdateSeeThroughAt(ushort offset)
+        {
+            var tile = tiles[offset];
+            if (!viewModel.ShowSeeThrough || displayedChunk.IsEmpty()
+                || tile.blockInstance.publicBlockID != AIR_ID)
+            {
+                tile.ClearGhost();
+                return;
+            }
+            byte x = (byte)(offset % Chunk.X_DIMENSION);
+            byte z = (byte)(offset / Chunk.X_DIMENSION);
+            for (int y = layer - 1; y >= 0; y--)
+            {
+                var id = displayedChunk.GetBlockFromCoords(x, z, (byte)y).publicBlockID;
+                if (id != AIR_ID)
+                {
+                    tile.SetGhost(id, (byte)(layer - y));
+                    return;
+                }
+            }
+            tile.ClearGhost();
+        }
 
         private void UpdateItemsOnGrid(List<ItemInstance> items)
         {
@@ -178,6 +243,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor.Map.ChunkView
         {
             displayedChunk.SetBlockFromCoords(bi, (byte)(offset % Chunk.X_DIMENSION), (byte)(offset / Chunk.Z_DIMENSION), viewModel.CurrentLayer);
             tiles[offset].blockInstance = bi;
+            UpdateSeeThroughAt(offset);
         }
 
     }

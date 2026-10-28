@@ -6,12 +6,19 @@
              xmlns:local="clr-namespace:DQB2IslandEditor.ObjectPK.Container"
              mc:Ignorable="d" 
              d:DesignHeight="32" d:DesignWidth="32" SnapsToDevicePixels="True">
-    <Border Name="Tile">
+    <Border Name="Tile" Background="Transparent">
         <Border.ToolTip>
             <ToolTip Background="Transparent" BorderThickness="0">
                 <local:InventoryInfo x:Name="IInfo" objectInfoPanel="{Binding blockInfo.Value}"/>
             </ToolTip>
         </Border.ToolTip>
-        <Image Name="Image" Source="{Binding blockInfo.Value.objectMapImage}" Stretch="Fill"/>
+        <Grid>
+            <!-- See-through: the first solid block below this (air) tile, darkened by depth. -->
+            <Grid Name="Ghost" Visibility="Collapsed" IsHitTestVisible="False">
+                <Image Name="GhostImage" Source="{Binding ghostInfo.Value.objectMapImage}" Stretch="Fill"/>
+                <Rectangle Name="GhostShade" Fill="Black"/>
+            </Grid>
+            <Image Name="Image" Source="{Binding blockInfo.Value.objectMapImage}" Stretch="Fill"/>
+        </Grid>
     </Border>
 </UserControl>
