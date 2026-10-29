@@ -83,6 +83,16 @@ namespace DQB2IslandEditor.DataPK
             return anyColumn ? lowest : (byte)0;
         }
 
+        //Highest layer in a column whose block isn't skipped, or 0. Reads the raw bytes so no BlockInstances are created.
+        public byte TopLayer(byte x, byte z, Func<uint, bool> skip)
+        {
+            if (blockBytes == null) return 0;
+            byte layer = (byte)(Y_DIMENSION - 1);
+            for (long offset = layer * SIZE_LAYER + z * X_DIMENSION * 2 + x * 2; layer > 0; layer--, offset -= SIZE_LAYER)
+                if (!skip(blockBytes[offset] + ((uint)(blockBytes[offset + 1] & 0x07) << 8))) break;
+            return layer;
+        }
+
         private bool IsAirAt(long offset)
         {
             return blockBytes[offset] == 0 && (blockBytes[offset + 1] & 0x07) == 0;
@@ -123,15 +133,33 @@ namespace DQB2IslandEditor.DataPK
         {
             return itemInstances;
         }
+        //True once a block has been changed since the island was loaded or last saved.
+        public bool Modified { get; set; }
+
         public void SetBlockFromCoords(BlockInstance blockInstance, byte x, byte z, byte layer)
         {
             if (blockBytes == null) return;
             var bytes = blockInstance.GetBytes();
             var offset = layer * SIZE_LAYER + z * X_DIMENSION * 2 + x * 2;
+            if (blockBytes[offset] != bytes[0] || blockBytes[offset + 1] != bytes[1]) Modified = true;
             blockBytes[offset] = bytes[0];
             blockBytes[offset+1] = bytes[1];
         }
 
+
+        //Sets the blocks in one column from fromLayer to toLayer (inclusive) to the given block.
+        public void FillColumn(BlockInstance blockInstance, byte x, byte z, byte fromLayer, byte toLayer)
+        {
+            if (blockBytes == null) return;
+            if (toLayer >= Y_DIMENSION) toLayer = (byte)(Y_DIMENSION - 1);
+            var bytes = blockInstance.GetBytes();
+            for (long offset = fromLayer * SIZE_LAYER + z * X_DIMENSION * 2 + x * 2; offset < (toLayer + 1) * SIZE_LAYER; offset += SIZE_LAYER)
+            {
+                if (blockBytes[offset] != bytes[0] || blockBytes[offset + 1] != bytes[1]) Modified = true;
+                blockBytes[offset] = bytes[0];
+                blockBytes[offset + 1] = bytes[1];
+            }
+        }
 
         public void CoverGroundWith(BlockInstance source, BlockInstance newindex)
         {

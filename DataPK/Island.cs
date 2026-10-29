@@ -318,6 +318,14 @@ namespace DQB2IslandEditor.DataPK
             }
         }
 
+        //Any block changed since loading or the last MarkSaved.
+        public bool HasUnsavedChanges => chunks.Any(c => c != null && c.Modified);
+
+        public void MarkSaved()
+        {
+            foreach (var chunk in chunks) if (chunk != null) chunk.Modified = false;
+        }
+
         public override string ToString()
         {
             StringBuilder output = new StringBuilder("ISLAND = {\n\tIsland ID : ");

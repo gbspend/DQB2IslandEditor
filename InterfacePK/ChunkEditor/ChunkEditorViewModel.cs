@@ -109,6 +109,64 @@ namespace DQB2IslandEditor.InterfacePK
             GenerateSelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public const byte GENERATE_MIN_LAYER = 4;
+        private const uint CHALK_ID = 8;
+
+        //Builds a Chalk mountain across the selected chunks, from GENERATE_MIN_LAYER up to its
+        //surface in each column. Blocks above the surface are left as they were.
+        public void Generate(MountainParams parameters)
+        {
+            if (!HasGenerateSelection) return;
+            int x0 = _generateSelection.Min(c => c % Island.GRID_DIMENSION);
+            int z0 = _generateSelection.Min(c => c / Island.GRID_DIMENSION);
+            int x1 = _generateSelection.Max(c => c % Island.GRID_DIMENSION);
+            int z1 = _generateSelection.Max(c => c / Island.GRID_DIMENSION);
+            int size = Chunk.X_DIMENSION;
+            var heights = MountainGenerator.HeightMap((x1 - x0 + 1) * size, (z1 - z0 + 1) * size, parameters);
+
+            var chalk = new BlockInstance(CHALK_ID, 0, false); //No chisel, not builder placed.
+            foreach (var chunkPosition in _generateSelection)
+            {
+                var chunk = CurrentIsland.GetChunk(chunkPosition);
+                int offsetX = (chunkPosition % Island.GRID_DIMENSION - x0) * size;
+                int offsetZ = (chunkPosition / Island.GRID_DIMENSION - z0) * size;
+                for (byte x = 0; x < size; x++)
+                    for (byte z = 0; z < size; z++)
+                    {
+                        int top = heights[offsetX + x, offsetZ + z];
+                        if (top >= 0) chunk.FillColumn(chalk, x, z, GENERATE_MIN_LAYER, (byte)top);
+                    }
+            }
+            //Show the result: jump to the middle of the selection if none of it is on screen,
+            //otherwise just redraw.
+            if (!CurrentChunks.Any(_generateSelection.Contains))
+                ChangeChunk((ushort)((x0 + x1) / 2 + Island.GRID_DIMENSION * ((z0 + z1) / 2)));
+            LayerUpdateNotification?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLayer)));
+        }
+
+        //Lowest and highest top solid layer (ignoring water) of every column in the selection.
+        //The mountain rises from the lowest so none of it is buried.
+        public (byte Min, byte Max) GenerateGroundRange()
+        {
+            if (!HasGenerateSelection) return (GENERATE_MIN_LAYER, GENERATE_MIN_LAYER);
+            byte min = byte.MaxValue, max = 0;
+            foreach (var chunkPosition in _generateSelection)
+            {
+                var chunk = CurrentIsland.GetChunk(chunkPosition);
+                for (byte x = 0; x < Chunk.X_DIMENSION; x++)
+                    for (byte z = 0; z < Chunk.Z_DIMENSION; z++)
+                    {
+                        byte top = chunk.TopLayer(x, z, IsAirOrWater);
+                        min = Math.Min(min, top);
+                        max = Math.Max(max, top);
+                    }
+            }
+            return (Math.Max(GENERATE_MIN_LAYER, min), Math.Max(GENERATE_MIN_LAYER, max));
+        }
+
+        private static bool IsAirOrWater(uint id) =>
+            id == 0 || (DataBaseReading.BLOCK_INFO_DICTIONARY.TryGetValue(id, out var info) && info.isWater);
+
         //------------------------------------HUD-----------------------------
         //Colective hud stuffs
         private bool _showMinimapGrid = true;

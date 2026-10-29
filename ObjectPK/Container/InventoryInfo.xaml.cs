@@ -27,7 +27,15 @@ namespace DQB2IslandEditor.ObjectPK.Container
             "objectInfoPanel",
             typeof(ObjectInfo),
             typeof(InventoryInfo),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, ObjectInfoChanged));
+
+        //The block under an open tooltip can change without the mouse moving (scrolling layers,
+        //switching chunks), so refresh it. Closed tooltips load when they next open.
+        private static void ObjectInfoChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var info = (InventoryInfo)d;
+            if (info.IsLoaded) info.LoadInformation(info, null);
+        }
 
         public ObjectInfo objectInfoPanel
         {

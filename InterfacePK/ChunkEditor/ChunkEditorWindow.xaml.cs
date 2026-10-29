@@ -43,6 +43,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             this.saveData = saveData;
 
             InitializeComponent();
+            Closing += (_, e) => { if (!discardChanges && !ConfirmDiscardChanges("Close chunk editor")) e.Cancel = true; };
             //Keep the layer bar highlight in sync with the current layer.
             viewModel.LayerUpdateNotification += (_, e) =>
             {
@@ -129,8 +130,20 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
             }
         }
 
+        //Set once the user has already agreed to lose changes (Reload), so closing doesn't ask again.
+        private bool discardChanges;
+
+        //True if there's nothing unsaved, or the user says it's fine to lose it.
+        private bool ConfirmDiscardChanges(string title)
+        {
+            if (!saveData.Island.HasUnsavedChanges) return true;
+            return MessageBox.Show("You have unsaved changes. Are you sure? They will be lost.", title,
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        }
+
         private void OpenSTGDAT(object sender, RoutedEventArgs e)
         {
+            if (!ConfirmDiscardChanges("Open STGDAT.bin")) return;
             try
             {
                 var openFileDialog = new OpenFileDialog
@@ -181,6 +194,7 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
                 reloaded.viewModel.ChangeChunk(chunk);
                 reloaded.viewModel.CurrentLayer = layer;
                 reloaded.Show();
+                discardChanges = true; //Already confirmed above.
                 Close();
             }
             catch (Exception ex)
@@ -233,7 +247,21 @@ namespace DQB2IslandEditor.InterfacePK.ChunkEditor
         private async void SaveSTGDATAsync(string path)
         {
             //I think this should wooork....
-            saveData.SaveSTGDATCompressedFile(path);
+            try
+            {
+                saveData.SaveSTGDATCompressedFile(path);
+                saveData.Island.MarkSaved();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SavedText.Opacity = 0;
+                    MessageBox.Show(ex.Message, "Failed to save file", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+                return;
+            }
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
